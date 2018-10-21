@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # Copyright (c) 2018 Jonathan Broche (@g0jhonny) @LeapSecurity
 
+from __future__ import print_function
 import requests, json, argparse, sys, re, time, os
 
 class HackedEmails:
@@ -20,7 +21,7 @@ class HIBP:
     def request(self, url):
         r = requests.get(url, headers=self.headers)
         if "Retry-After" in r.headers:
-            print "  Sleeping for {}s to avoid HIBP lockout.".format(r.headers["Retry-After"])
+            print("  Sleeping for {}s to avoid HIBP lockout.".format(r.headers["Retry-After"]))
             time.sleep(int(r.headers["Retry-After"])) #sleep to avoid HTTP 429/Rate Limiting
             r = requests.get(url, headers=self.headers)
         if r.status_code == 200:
@@ -172,10 +173,10 @@ def main():
     args = parser.parse_args()
 
     if not args.email and not args.domain:
-        print "You didn't provide any work for me to do."
+        print("You didn't provide any work for me to do.")
         sys.exit(1)
 
-    print "\nPastepwnd {}\n".format(parser.version)
+    print("\nPastepwnd {}\n".format(parser.version))
 
     hibp = HIBP()
     he = HackedEmails()
@@ -185,7 +186,7 @@ def main():
     email_html, domain_html = "", ""
 
     if args.email:
-        print "Status: Searching for Compromised Emails..."
+        print("Status: Searching for Compromised Emails...")
         if os.path.isfile(args.email): #if file add emails
             with open (args.email) as f:
                 for line in f.readlines():
@@ -203,22 +204,22 @@ def main():
                 if he_response:
                     for breach in he_response["data"]:
                         results.append(workbench.format_hackedemail(breach, email))
-            else: print "'{}' is not a valid email address.".format(email)
+            else: print("'{}' is not a valid email address.".format(email))
         if results:
             try:
                 for record in results:
-                    print "Title: {}, Date: {}".format(record[0], record[2])
+                    print("Title: {}, Date: {}".format(record[0], record[2]))
             except UnicodeEncodeError as e:
                 pass
             
             if args.html:
                 email_html = output.create_email_table(results)
             results, targets = [], []
-        else: print "No compromises identified for {} email.".format(args.email)
+        else: print("No compromises identified for {} email.".format(args.email))
         
 
     if args.domain:
-        print "Status: Searching for Compromised Domains..."
+        print("Status: Searching for Compromised Domains...")
         if os.path.isfile(args.domain):
             with open(args.domain) as f:
                 for line in f.readlines():
@@ -234,19 +235,19 @@ def main():
         if results:
             try:
                 for record in results:
-                    print "Title: {}, Date: {}, Pwnd Count: {}".format(record[0], record[2], record[4])
+                    print("Title: {}, Date: {}, Pwnd Count: {}".format(record[0], record[2], record[4]))
             except UnicodeEncodeError as e:
                 pass
 
             if args.html:
                 domain_html = output.create_domain_table(results)
-        else: print "No compromises identified for {} domain.".format(args.domain)
+        else: print("No compromises identified for {} domain.".format(args.domain))
 
 
     final_html = domain_html + email_html
     if final_html:
         file = output.write_file(output.create_webpage(final_html))
-        print "\nHTML Results saved to '{}'\n".format(file)
+        print("\nHTML Results saved to '{}'\n".format(file))
 
 if __name__ == '__main__':
     main()
